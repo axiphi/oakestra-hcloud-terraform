@@ -38,7 +38,9 @@ available in your shell for interacting with the Oakestra components.
 
 > [!TIP]
 > If you don't want to manually source the generated `init.sh` script everytime you start a new shell,
-> add `. ~/.local/share/oakestra-dev/*/init.sh` to your shell initialization script (e.g. `.bashrc` or `.zshrc`).
+> you can automatically do it in your shell initialization script, for example:
+> - Bash: `for oak_init in ~/.local/share/oakestra-dev/*/init.sh; do [ -e "${oak_init}" ] && . "${oak_init}"; done`
+> - Zsh: `for oak_init in ~/.local/share/oakestra-dev/*/init.sh(N); do . "${oak_init}"; done`
 
 
 ### Commands
