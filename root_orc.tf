@@ -102,7 +102,7 @@ data "cloudinit_config" "root_orc" {
             *filter
             :DOCKER-USER - [0:0]
             -A DOCKER-USER -s ${cidrsubnet(var.watchtower_subnet_ipv4_cidr, 2, 2)} -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
-            -A DOCKER-USER -s ${cidrsubnet(var.watchtower_subnet_ipv4_cidr, 2, 2)} -j DROP
+            -A DOCKER-USER -s ${cidrsubnet(var.watchtower_subnet_ipv4_cidr, 2, 2)} -j REJECT
             COMMIT
           EOT
           owner       = "root:root"
