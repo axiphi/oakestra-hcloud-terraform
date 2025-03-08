@@ -1,0 +1,111 @@
+services:
+  #####=====#####=====##### Oakestra Services #####=====#####=====#####
+
+  dashboard:
+    image: "oakestra/dashboard:${OAKESTRA_DASHBOARD_VERSION}"
+    restart: "always"
+    environment:
+      - "API_ADDRESS=${ROOT_ORC_IPV4}:10000"
+    ports:
+      - "80:80"
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
+
+  cloud-scheduler:
+    image: "oakestra/oakestra/cloud-scheduler:${OAKESTRA_VERSION}"
+    restart: "always"
+    environment:
+      - "MY_PORT=10004"
+      - "SYSTEM_MANAGER_URL=root-system-manager"
+      - "SYSTEM_MANAGER_PORT=10000"
+      - "RESOURCE_ABSTRACTOR_URL=root-resource-abstractor"
+      - "RESOURCE_ABSTRACTOR_PORT=11011"
+      - "REDIS_ADDR=redis://:cloudRedis@root-redis:6379"
+      - "CLOUD_MONGO_URL=root-mongo"
+      - "CLOUD_MONGO_PORT=10007"
+    ports:
+      - "10004:10004"
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
+
+  jwt-generator:
+    image: "oakestra/oakestra/jwt-generator:${OAKESTRA_VERSION}"
+    restart: "always"
+    environment:
+      - "JWT_GENERATOR_PORT=10011"
+    ports:
+      - "10011:10011"
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
+
+  root-resource-abstractor:
+    image: "oakestra/oakestra/root-resource-abstractor:${OAKESTRA_VERSION}"
+    restart: "always"
+    environment:
+      - "RESOURCE_ABSTRACTOR_PORT=11011"
+      - "CLOUD_MONGO_URL=root-mongo"
+      - "CLOUD_MONGO_PORT=10007"
+    ports:
+      - "11011:11011"
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
+
+  root-service-manager:
+    image: "oakestra/oakestra-net/root-service-manager:${OAKESTRA_VERSION}"
+    restart: "always"
+    environment:
+      - "MY_PORT=10099"
+      - "SYSTEM_MANAGER_URL=root-system-manager"
+      - "SYSTEM_MANAGER_PORT=10000"
+      - "CLOUD_MONGO_URL=root-mongo-net"
+      - "CLOUD_MONGO_PORT=10008"
+      - "JWT_GENERATOR_URL=jwt-generator"
+      - "JWT_GENERATOR_PORT=10011"
+    ports:
+      - "10099:10099"
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
+
+  root-system-manager:
+    image: "oakestra/oakestra/root-system-manager:${OAKESTRA_VERSION}"
+    restart: "always"
+    environment:
+      - "CLOUD_MONGO_URL=root-mongo"
+      - "CLOUD_MONGO_PORT=10007"
+      - "CLOUD_SCHEDULER_URL=cloud-scheduler"
+      - "CLOUD_SCHEDULER_PORT=10004"
+      - "RESOURCE_ABSTRACTOR_URL=root-resource-abstractor"
+      - "RESOURCE_ABSTRACTOR_PORT=11011"
+      - "NET_PLUGIN_URL=root-service-manager"
+      - "NET_PLUGIN_PORT=10099"
+      - "JWT_GENERATOR_URL=jwt-generator"
+      - "JWT_GENERATOR_PORT=10011"
+    ports:
+      - "10000:10000"
+      - "50052:50052"
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
+
+
+  #####=====#####=====##### Third-Party Services #####=====#####=====#####
+
+  root-mongo:
+    image: "mongo:8.0"
+    command: [ "mongod", "--port", "10007" ]
+    restart: "always"
+    ports:
+      - "10007:10007"
+
+  root-mongo-net:
+    image: "mongo:8.0"
+    command: [ "mongod", "--port", "10008" ]
+    restart: "always"
+    ports:
+      - "10008:10008"
+
+  root-redis:
+    image: "redis:7.4.2"
+    command: [ "redis-server", "--requirepass", "cloudRedis" ]
+    restart: "always"
+    ports:
+      - "6379:6379"
