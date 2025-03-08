@@ -1,0 +1,99 @@
+services:
+  #####=====#####=====##### Oakestra Services #####=====#####=====#####
+
+  cluster-manager:
+    image: "oakestra/oakestra/cluster-manager:${OAKESTRA_VERSION}"
+    restart: "always"
+    environment:
+      - "MY_PORT=10100"
+      - "SYSTEM_MANAGER_URL=${ROOT_ORC_IPV4}"
+      - "SYSTEM_MANAGER_PORT=10000"
+      - "CLUSTER_SERVICE_MANAGER_ADDR=cluster-service-manager"
+      - "CLUSTER_SERVICE_MANAGER_PORT=10110"
+      - "CLUSTER_MONGO_URL=cluster-mongo"
+      - "CLUSTER_MONGO_PORT=10107"
+      - "CLUSTER_SCHEDULER_URL=cluster-scheduler"
+      - "CLUSTER_SCHEDULER_PORT=10105"
+      - "MQTT_BROKER_URL=cluster-mqtt"
+      - "MQTT_BROKER_PORT=10003"
+      - "CLUSTER_NAME=${CLUSTER_NAME}"
+      - "CLUSTER_LOCATION=${CLUSTER_LOCATION}"
+    ports:
+      - "10100:10100"
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
+
+  cluster-scheduler:
+    image: "oakestra/oakestra/cluster-scheduler:${OAKESTRA_VERSION}"
+    restart: "always"
+    environment:
+      - "MY_PORT=10105"
+      - "CLUSTER_MANAGER_URL=cluster-manager"
+      - "CLUSTER_MANAGER_PORT=10100"
+      - "CLUSTER_MONGO_URL=cluster-mongo"
+      - "CLUSTER_MONGO_PORT=10107"
+      - "REDIS_ADDR=redis://:clusterRedis@cluster-redis:6479"
+    ports:
+      - "10105:10105"
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
+
+  cluster-service-manager:
+    image: "oakestra/oakestra-net/cluster-service-manager:${OAKESTRA_VERSION}"
+    restart: "always"
+    environment:
+      - "MY_PORT=10110"
+      - "MQTT_BROKER_PORT=10003"
+      - "MQTT_BROKER_URL=cluster-mqtt"
+      - "ROOT_SERVICE_MANAGER_URL=${ROOT_ORC_IPV4}"
+      - "ROOT_SERVICE_MANAGER_PORT=10099"
+      - "SYSTEM_MANAGER_URL=cluster-manager"
+      - "SYSTEM_MANAGER_PORT=10000"
+      - "CLUSTER_MONGO_URL=cluster-mongo-net"
+      - "CLUSTER_MONGO_PORT=10108"
+    ports:
+      - "10110:10110"
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
+
+
+  #####=====#####=====##### Third-Party Services #####=====#####=====#####
+
+  cluster-mongo:
+    image: "mongo:8.0"
+    command: ["mongod", "--port", "10107"]
+    restart: "always"
+    ports:
+      - "10107:10107"
+
+  cluster-mongo-net:
+    image: "mongo:8.0"
+    command: ["mongod", "--port", "10108"]
+    restart: "always"
+    ports:
+      - "10108:10108"
+
+  cluster-mqtt:
+    image: "eclipse-mosquitto:1.6"
+    restart: "always"
+    configs:
+      - source: "cluster-mqtt-config"
+        target: "/mosquitto/config/mosquitto.conf"
+    ports:
+      - "10003:10003"
+
+  cluster-redis:
+    image: "redis:7.4.2"
+    command: ["redis-server", "--requirepass", "clusterRedis", "--port", "6479"]
+    restart: "always"
+    ports:
+      - "6479:6479"
+
+
+configs:
+  #####=====#####=====##### Third-Party Configs #####=====#####=====#####
+
+  cluster-mqtt-config:
+    content: |
+      listener 10003
+      allow_anonymous true

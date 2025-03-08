@@ -176,9 +176,9 @@ data "cloudinit_config" "root_orc" {
         {
           path = "/etc/docker-compose/oakestra-root-orc/.env",
           content     = <<-EOT
-            OAKESTRA_VERSION=${var.oakestra_version}
-            OAKESTRA_DASHBOARD_VERSION=${var.oakestra_dashboard_version}
-            ROOT_ORC_IPV4=${local.root_orc_ipv4}
+            OAKESTRA_VERSION="${var.oakestra_version}"
+            OAKESTRA_DASHBOARD_VERSION="${var.oakestra_dashboard_version}"
+            ROOT_ORC_IPV4="${local.root_orc_ipv4}"
           EOT
           owner       = "root:root"
           permissions = "0644"
