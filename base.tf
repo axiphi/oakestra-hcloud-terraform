@@ -1,5 +1,5 @@
 data "external" "xdg_data_home" {
-  program = ["sh", "${path.module}/resources/json-wrap.sh", "--ignore-error", "printenv", "XDG_DATA_HOME"]
+  program = ["sh", "${path.module}/scripts/json-wrap.sh", "--ignore-error", "printenv", "XDG_DATA_HOME"]
 }
 
 data "hcloud_server_type" "this" {

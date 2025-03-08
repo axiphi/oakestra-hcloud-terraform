@@ -162,13 +162,13 @@ data "cloudinit_config" "registry" {
         },
         {
           path        = "/usr/local/bin/wait-for-it.sh",
-          content     = file("${path.module}/resources/wait-for-it.sh")
+          content     = file("${path.module}/scripts/wait-for-it.sh")
           owner       = "root:root"
           permissions = "0755"
         },
         {
           path        = "/usr/local/bin/normalize-image.sh",
-          content     = file("${path.module}/resources/normalize-image.sh")
+          content     = file("${path.module}/scripts/normalize-image.sh")
           owner       = "root:root"
           permissions = "0755"
         },
