@@ -11,7 +11,7 @@ Before you begin, ensure you have the following installed and configured:
    * [Terraform](https://developer.hashicorp.com/terraform/install) or [OpenTofu](https://opentofu.org/docs/intro/install/)
    * [WireGuard (Tools)](https://www.wireguard.com/install/)
 2. **Optional Tools** 
-   * [pv](https://wiki.ubuntuusers.de/pv/) for progress indications 
+   * [pv](https://wiki.ubuntuusers.de/pv/) for progress indicators 
 3. **Root Privileges**
    * Your user needs to have root privileges on your local machine (e.g. via `sudo`).
 
@@ -35,12 +35,13 @@ After deployment, Terraform will generate a Bash script at `${XDG_DATA_HOME}/oak
 (e.g. `~/.local/share/oakestra-dev/oak/init.sh`). 
 Sourcing this script (e.g. `$ . ~/.local/share/oakestra-dev/oak/init.sh`) will make a new commands
 available in your shell for interacting with the Oakestra components.
+The first command you will need to run is `<setup-name>-up` to connect to the just created Oakestra setup.
 
 > [!TIP]
 > If you don't want to manually source the generated `init.sh` script everytime you start a new shell,
 > you can automatically do it in your shell initialization script, for example:
-> - Bash: `for oak_init in ~/.local/share/oakestra-dev/*/init.sh; do [ -e "${oak_init}" ] && . "${oak_init}"; done`
-> - Zsh: `for oak_init in ~/.local/share/oakestra-dev/*/init.sh(N); do . "${oak_init}"; done`
+> - **.bashrc**: `for oak_init in ~/.local/share/oakestra-dev/*/init.sh; do [ -e "${oak_init}" ] && . "${oak_init}"; done`
+> - **.zshrc**: `for oak_init in ~/.local/share/oakestra-dev/*/init.sh(N); do . "${oak_init}"; done`
 
 
 ### Commands
@@ -79,3 +80,8 @@ available in your shell for interacting with the Oakestra components.
 > Make sure to run `$ <setup-name>-down` before using `$ tf destroy` or `$ tofu destroy`,
 > to make sure the WireGuard tunnel is properly removed.
 > If your forgot to do this, you can remove the WireGuard network interface manually with `$ sudo ip link del wg-<setup-name>`.
+
+
+## Network Architecture
+
+![Network Diagram](docs/network.png)
