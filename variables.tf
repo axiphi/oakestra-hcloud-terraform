@@ -113,13 +113,6 @@ variable "watchtower_subnet_ipv4_cidr" {
   }
 }
 
-variable "debug_ports_enabled" {
-  type        = string
-  nullable    = false
-  default     = false
-  description = "If true, additional ports are exposed from Oakestra components for debugging purposes."
-}
-
 variable "additional_packages" {
   type        = list(string)
   nullable    = false
