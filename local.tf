@@ -128,8 +128,8 @@ resource "local_file" "init_script" {
 
       for worker in '${join("' '", local.worker_names)}'; do
         ${var.setup_name}-ssh -q "$${worker}" "systemctl stop nodeengine.service"
-        scp -q -p -F "/home/phiber/.local/share/oakestra-dev/oaks-1000/ssh_config" "$1" "$${worker}:/usr/local/bin/NodeEngine"
-        scp -q -p -F "/home/phiber/.local/share/oakestra-dev/oaks-1000/ssh_config" "$2" "$${worker}:/usr/local/bin/nodeengined"
+        scp -q -p -F "${local_file.ssh_config.filename}" "$1" "$${worker}:/usr/local/bin/NodeEngine"
+        scp -q -p -F "${local_file.ssh_config.filename}" "$2" "$${worker}:/usr/local/bin/nodeengined"
         ${var.setup_name}-ssh -q "$${worker}" "systemctl start nodeengine.service"
       done
     }
@@ -142,7 +142,7 @@ resource "local_file" "init_script" {
 
       for worker in '${join("' '", local.worker_names)}'; do
         ${var.setup_name}-ssh -q "$${worker}" "systemctl stop netmanager.service"
-        scp -q -p -F "/home/phiber/.local/share/oakestra-dev/oaks-1000/ssh_config" "$1" "$${worker}:/usr/local/bin/NetManager"
+        scp -q -p -F "${local_file.ssh_config.filename}" "$1" "$${worker}:/usr/local/bin/NetManager"
         ${var.setup_name}-ssh -q "$${worker}" "systemctl start netmanager.service"
       done
     }

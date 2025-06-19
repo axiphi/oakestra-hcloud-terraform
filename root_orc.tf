@@ -168,13 +168,13 @@ data "cloudinit_config" "root_orc" {
           permissions = "0640"
         },
         {
-          path = "/etc/docker-compose/oakestra-root-orc/docker-compose.yml",
-          content = yamlencode(local.root_orc_compose_full)
+          path        = "/etc/docker-compose/oakestra-root-orc/docker-compose.yml",
+          content     = yamlencode(local.root_orc_compose_full)
           owner       = "root:root"
           permissions = "0644"
         },
         {
-          path = "/etc/docker-compose/oakestra-root-orc/.env",
+          path        = "/etc/docker-compose/oakestra-root-orc/.env",
           content     = <<-EOT
             OAKESTRA_VERSION="${var.oakestra_version}"
             OAKESTRA_DASHBOARD_VERSION="${var.oakestra_dashboard_version}"
