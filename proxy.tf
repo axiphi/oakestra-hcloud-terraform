@@ -68,7 +68,7 @@ data "wireguard_config_document" "proxy_client_tcp" {
   private_key = wireguard_asymmetric_key.proxy_client[count.index].private_key
   addresses   = ["${cidrhost(local.proxy_client_subnet_ipv4_cidr, 2 + count.index)}/32"]
   mtu         = 1200
-  pre_up      = ["udp2raw -c -l 127.0.0.1:51820 -r ${hcloud_primary_ip.proxy_server.ip_address}:51819 -k '${random_password.udp2raw.result}' --raw-mode faketcp -a --log-level 3 &"]
+  pre_up      = ["udp2raw -c -l 127.0.0.1:51820 -r ${hcloud_primary_ip.proxy_server[0].ip_address}:51819 -k '${random_password.udp2raw.result}' --raw-mode faketcp -a --log-level 3 &"]
   post_down   = ["pkill -f 'udp2raw -c -l 127.0.0.1:51820'"]
 
   peer {
@@ -167,12 +167,12 @@ data "cloudinit_config" "proxy_server" {
           permissions = "0644"
         }
       ]
+      runcmd = [
+        "curl --location --silent https://github.com/wangyu-/udp2raw/releases/latest/download/udp2raw_binaries.tar.gz | sudo tar --extract --gzip --transform='s|${local.udp2raw_binary}|udp2raw|' --directory='/usr/local/bin' --file=- ${local.udp2raw_binary}",
+        "systemctl daemon-reload",
+        "systemctl enable --now udp2raw"
+      ]
     })
-    runcmd = [
-      "curl --location --silent https://github.com/wangyu-/udp2raw/releases/latest/download/udp2raw_binaries.tar.gz | sudo tar --extract --gzip --transform='s|${local.udp2raw_binary}|udp2raw|' --directory='/usr/local/bin' --file=- ${local.udp2raw_binary}",
-      "systemctl daemon-reload",
-      "systemctl enable --now udp2raw"
-    ]
   }
 }
 
