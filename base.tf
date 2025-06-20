@@ -28,11 +28,13 @@ locals {
   base_data_dir     = trimsuffix(pathexpand(coalesce(data.external.xdg_data_home.result.value, "~/.local/share")), "/")
   oakestra_data_dir = "${local.base_data_dir}/oakestra-dev/${var.setup_name}"
 
-  wireguard_subnet_ipv4_cidr = cidrsubnet(var.node_subnet_ipv4_cidr, 1, 0)
+  wireguard_subnet_ipv4_cidr = cidrsubnet(var.node_subnet_ipv4_cidr, 2, 0)
   wireguard_local_ipv4       = cidrhost(local.wireguard_subnet_ipv4_cidr, 2)
   wireguard_remote_ipv4      = cidrhost(local.wireguard_subnet_ipv4_cidr, 3)
 
-  hcloud_subnet_ipv4_cidr = cidrsubnet(var.node_subnet_ipv4_cidr, 1, 1)
+  proxy_client_subnet_ipv4_cidr = cidrsubnet(var.node_subnet_ipv4_cidr, 2, 1)
+
+  hcloud_subnet_ipv4_cidr = cidrsubnet(var.node_subnet_ipv4_cidr, 2, 2)
   hcloud_gateway_ipv4     = cidrhost(local.hcloud_subnet_ipv4_cidr, 1)
 
   registry_subnet_ipv4_cidr = cidrsubnet(local.hcloud_subnet_ipv4_cidr, 4, 0)
@@ -41,8 +43,10 @@ locals {
   registry_docker_hub_port  = 10501
   registry_ghcr_io_port     = 10502
 
-  root_subnet_ipv4_cidr = cidrsubnet(local.hcloud_subnet_ipv4_cidr, 4, 1)
-  root_orc_ipv4         = cidrhost(local.root_subnet_ipv4_cidr, 2)
+  root_subnet_ipv4_cidr       = cidrsubnet(local.hcloud_subnet_ipv4_cidr, 4, 1)
+  root_orc_ipv4               = cidrhost(local.root_subnet_ipv4_cidr, 2)
+  proxy_server_ipv4           = cidrhost(local.root_subnet_ipv4_cidr, 3)
+  proxy_server_wireguard_ipv4 = "192.168.0.0"
 
   cluster_subnet_ipv4_cidrs = [for cluster_idx in range(length(var.clusters)) : cidrsubnet(local.hcloud_subnet_ipv4_cidr, 4, 2 + cluster_idx)]
   clusters = [for cluster_idx, cluster in var.clusters : {

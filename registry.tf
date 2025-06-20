@@ -93,7 +93,29 @@ data "cloudinit_config" "registry" {
   part {
     content_type = "text/cloud-config"
     content = yamlencode({
-      bootcmd = ["sysctl -w net.ipv4.ip_forward=1"]
+      bootcmd = [
+        "sysctl -w net.ipv4.ip_forward=1",
+        "cloud-init-per once disable-hc-net systemctl mask --now hc-net-ifup@enp7s0.service hc-net-scan.service",
+        <<-EOT
+          cloud-init-per once write-enp7s0-conf tee /etc/systemd/network/99-enp7s0.network <<EOF
+          [Match]
+          Name = enp7s0
+
+          [Network]
+          DHCP = ipv4
+
+          [Link]
+          MTUBytes = 1350
+
+          [Route]
+          Destination = ${local.proxy_client_subnet_ipv4_cidr}
+          Gateway = ${local.hcloud_gateway_ipv4}
+          Metric = 1002
+          EOF
+        EOT
+        ,
+        "cloud-init-per once restart-networking systemctl restart systemd-networkd.service",
+      ]
       apt = {
         sources = {
           docker = {

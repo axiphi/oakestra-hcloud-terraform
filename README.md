@@ -82,6 +82,20 @@ The first command you will need to run is `<setup-name>-up` to connect to the ju
 > If your forgot to do this, you can remove the WireGuard network interface manually with `$ sudo ip link del wg-<setup-name>`.
 
 
+## Proxy
+
+When the `proxy_client_count` variable is greater than 0, Terraform will configure an additional Hetzner server
+that acts as a proxy and allows external servers to connect to the local network of the setup.
+From now on these external servers will be referred to as proxy clients.
+
+This is implemented with Wireguard VPN tunnels, for which you can get the configs for all proxy clients
+via the `proxy_client_config_udp` or `proxy_client_config_tcp` outputs.
+If you want to use the **TCP** variant, you need to install [udp2raw](https://github.com/wangyu-/udp2raw) on the proxy client.
+To install the latest version, you can use this shell one-liner, which installs the binary to `/usr/local/bin`:
+- *ARM64* (with hardware AES support): `$ curl -Ls https://github.com/wangyu-/udp2raw/releases/latest/download/udp2raw_binaries.tar.gz | tar -xzf - --transform='s|udp2raw_arm_asm_aes|udp2raw|' -C /usr/local/bin udp2raw_arm_asm_aes`
+- *AMD64* (with hardware AES support): `$ curl -Ls https://github.com/wangyu-/udp2raw/releases/latest/download/udp2raw_binaries.tar.gz | tar -xzf - --transform='s|udp2raw_amd64_hw_aes|udp2raw|' -C /usr/local/bin udp2raw_amd64_hw_aes`
+
+
 ## Network Architecture
 
 ![Network Diagram](docs/network.png)

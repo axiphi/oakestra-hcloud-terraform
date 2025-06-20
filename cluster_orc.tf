@@ -88,6 +88,7 @@ data "cloudinit_config" "cluster_orc" {
           iface enp7s0 inet dhcp
             up ip route add default via ${local.hcloud_gateway_ipv4} dev enp7s0 src ${each.value.orc_ipv4} metric 1002 mtu 1450
             up ip route add ${local.wireguard_subnet_ipv4_cidr} via ${local.hcloud_gateway_ipv4} dev enp7s0 src ${each.value.orc_ipv4} metric 1002 mtu 1350
+            up ip route add ${local.proxy_client_subnet_ipv4_cidr} via ${local.hcloud_gateway_ipv4} dev enp7s0 src ${each.value.orc_ipv4} metric 1002 mtu 1350
           EOF
         EOT
         ,

@@ -33,7 +33,8 @@ resource "local_file" "ssh_known_hosts" {
       "${local.root_orc_ipv4} ${chomp(tls_private_key.ssh_server.public_key_openssh)}"
     ],
     [for cluster in local.clusters : "${cluster.orc_ipv4} ${chomp(tls_private_key.ssh_server.public_key_openssh)}"],
-    [for worker in local.workers : "${worker.ipv4} ${chomp(tls_private_key.ssh_server.public_key_openssh)}"]
+    [for worker in local.workers : "${worker.ipv4} ${chomp(tls_private_key.ssh_server.public_key_openssh)}"],
+    var.proxy_client_count > 0 ? ["${local.proxy_server_ipv4} ${chomp(tls_private_key.ssh_server.public_key_openssh)}"] : []
   ))
   file_permission = "0600"
 }
@@ -75,7 +76,16 @@ resource "local_file" "ssh_config" {
          IdentityFile ${local_sensitive_file.ssh_key.filename}
          UserKnownHostsFile ${local_file.ssh_known_hosts.filename}
       EOT
-    )]
+    )],
+    var.proxy_client_count > 0 ? [(
+      <<-EOT
+        Host proxy
+         HostName ${local.proxy_server_ipv4}
+         User root
+         IdentityFile ${local_sensitive_file.ssh_key.filename}
+         UserKnownHostsFile ${local_file.ssh_known_hosts.filename}
+      EOT
+    )] : []
   ))
   file_permission = "0644"
 }
@@ -92,7 +102,7 @@ resource "local_file" "init_script" {
 
     if [ "$${BASH_SOURCE-}" = "$0" ]; then
       echo "You must source this script: \$ source $0" >&2
-      exit 33it
+      exit 33
     fi
 
     ${var.setup_name}-up() {

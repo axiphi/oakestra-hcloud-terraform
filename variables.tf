@@ -67,6 +67,17 @@ variable "clusters" {
   }]
 }
 
+variable "proxy_server_type" {
+  type        = string
+  description = "The Hetzner Cloud server type for the proxy server."
+  default     = "cax11"
+}
+
+variable "proxy_client_count" {
+  type    = number
+  default = 0
+}
+
 variable "node_subnet_ipv4_cidr" {
   type        = string
   nullable    = false
@@ -111,13 +122,6 @@ variable "watchtower_subnet_ipv4_cidr" {
     condition     = endswith(var.watchtower_subnet_ipv4_cidr, "/30")
     error_message = "Currently only /30 subnets are supported."
   }
-}
-
-variable "debug_ports_enabled" {
-  type        = string
-  nullable    = false
-  default     = false
-  description = "If true, additional ports are exposed from Oakestra components for debugging purposes."
 }
 
 variable "additional_packages" {
