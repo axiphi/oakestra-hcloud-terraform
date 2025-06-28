@@ -59,7 +59,7 @@ data "wireguard_config_document" "proxy_client_udp" {
   peer {
     public_key  = wireguard_asymmetric_key.proxy_server[0].public_key
     endpoint    = "${hcloud_primary_ip.proxy_server[0].ip_address}:51820"
-    allowed_ips = ["${local.proxy_server_wireguard_ipv4}/32", local.hcloud_subnet_ipv4_cidr]
+    allowed_ips = ["${local.proxy_server_wireguard_ipv4}/32", local.wireguard_subnet_ipv4_cidr, local.hcloud_subnet_ipv4_cidr]
   }
 }
 
@@ -74,7 +74,7 @@ data "wireguard_config_document" "proxy_client_tcp" {
   peer {
     public_key  = wireguard_asymmetric_key.proxy_server[0].public_key
     endpoint    = "127.0.0.1:51820"
-    allowed_ips = ["${local.proxy_server_wireguard_ipv4}/32", local.hcloud_subnet_ipv4_cidr]
+    allowed_ips = ["${local.proxy_server_wireguard_ipv4}/32", local.wireguard_subnet_ipv4_cidr, local.hcloud_subnet_ipv4_cidr]
   }
 }
 
@@ -110,7 +110,7 @@ data "cloudinit_config" "proxy_server" {
         "cloud-init-per once restart-networking systemctl restart systemd-networkd.service",
       ],
       package_update = true
-      packages = concat([var.additional_packages], [
+      packages = concat(var.additional_packages, [
         "iptables-persistent",
       ])
       ssh_pwauth = false

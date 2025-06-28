@@ -92,8 +92,8 @@ This is implemented with Wireguard VPN tunnels, for which you can get the config
 via the `proxy_client_config_udp` or `proxy_client_config_tcp` outputs.
 If you want to use the **TCP** variant, you need to install [udp2raw](https://github.com/wangyu-/udp2raw) on the proxy client.
 To install the latest version, you can use this shell one-liner, which installs the binary to `/usr/local/bin`:
-- *ARM64* (with hardware AES support): `$ curl -Ls https://github.com/wangyu-/udp2raw/releases/latest/download/udp2raw_binaries.tar.gz | tar -xzf - --transform='s|udp2raw_arm_asm_aes|udp2raw|' -C /usr/local/bin udp2raw_arm_asm_aes`
-- *AMD64* (with hardware AES support): `$ curl -Ls https://github.com/wangyu-/udp2raw/releases/latest/download/udp2raw_binaries.tar.gz | tar -xzf - --transform='s|udp2raw_amd64_hw_aes|udp2raw|' -C /usr/local/bin udp2raw_amd64_hw_aes`
+- *ARM64* (with hardware AES support): `$ curl -Ls https://github.com/wangyu-/udp2raw/releases/latest/download/udp2raw_binaries.tar.gz | sudo tar -xzf - --transform='s|udp2raw_arm_asm_aes|udp2raw|' -C /usr/local/bin udp2raw_arm_asm_aes`
+- *AMD64* (with hardware AES support): `$ curl -Ls https://github.com/wangyu-/udp2raw/releases/latest/download/udp2raw_binaries.tar.gz | sudo tar -xzf - --transform='s|udp2raw_amd64_hw_aes|udp2raw|' -C /usr/local/bin udp2raw_amd64_hw_aes`
 
 
 ## Network Architecture

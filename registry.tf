@@ -65,7 +65,7 @@ data "wireguard_config_document" "local" {
   peer {
     public_key  = wireguard_asymmetric_key.remote.public_key
     endpoint    = "${hcloud_primary_ip.registry.ip_address}:51820"
-    allowed_ips = [local.wireguard_subnet_ipv4_cidr, local.hcloud_subnet_ipv4_cidr]
+    allowed_ips = [local.wireguard_subnet_ipv4_cidr, local.hcloud_subnet_ipv4_cidr, local.proxy_client_subnet_ipv4_cidr]
   }
 }
 
