@@ -13,9 +13,15 @@ resource "null_resource" "oakestra_data_dir" {
   }
 }
 
-resource "local_sensitive_file" "wireguard_config" {
-  filename        = "${null_resource.oakestra_data_dir.triggers.oakestra_data_dir}/wg-${var.setup_name}.conf"
-  content         = data.wireguard_config_document.local.conf
+resource "local_sensitive_file" "wireguard_config_udp" {
+  filename        = "${null_resource.oakestra_data_dir.triggers.oakestra_data_dir}/wg-${var.setup_name}-udp.conf"
+  content         = data.wireguard_config_document.local_udp.conf
+  file_permission = "0600"
+}
+
+resource "local_sensitive_file" "wireguard_config_tcp" {
+  filename        = "${null_resource.oakestra_data_dir.triggers.oakestra_data_dir}/wg-${var.setup_name}-tcp.conf"
+  content         = data.wireguard_config_document.local_tcp.conf
   file_permission = "0600"
 }
 
@@ -79,7 +85,7 @@ resource "local_file" "ssh_config" {
     )],
     var.proxy_client_count > 0 ? [(
       <<-EOT
-        Host proxy
+        Host proxy-server
          HostName ${local.proxy_server_ipv4}
          User root
          IdentityFile ${local_sensitive_file.ssh_key.filename}
@@ -105,12 +111,20 @@ resource "local_file" "init_script" {
       exit 33
     fi
 
-    ${var.setup_name}-up() {
-      sudo wg-quick up "${local_sensitive_file.wireguard_config.filename}"
+    ${var.setup_name}-udp-up() {
+      sudo wg-quick up "${local_sensitive_file.wireguard_config_udp.filename}"
     }
 
-    ${var.setup_name}-down() {
-      sudo wg-quick down "${local_sensitive_file.wireguard_config.filename}"
+    ${var.setup_name}-udp-down() {
+      sudo wg-quick down "${local_sensitive_file.wireguard_config_udp.filename}"
+    }
+
+    ${var.setup_name}-tcp-up() {
+      sudo wg-quick up "${local_sensitive_file.wireguard_config_tcp.filename}"
+    }
+
+    ${var.setup_name}-tcp-down() {
+      sudo wg-quick down "${local_sensitive_file.wireguard_config_tcp.filename}"
     }
 
     ${var.setup_name}-ssh() {

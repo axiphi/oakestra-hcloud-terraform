@@ -3,7 +3,7 @@ locals {
     "arm" = "udp2raw_arm_asm_aes"
     "x86" = "udp2raw_amd64_hw_aes"
   }
-  udp2raw_binary = local.hcloud_architecture_to_udp2raw_binary[data.hcloud_server_type.this[var.proxy_server_type].architecture]
+  proxy_udp2raw_binary = local.hcloud_architecture_to_udp2raw_binary[data.hcloud_server_type.this[var.proxy_server_type].architecture]
 }
 
 resource "hcloud_network_route" "proxy" {
@@ -168,7 +168,7 @@ data "cloudinit_config" "proxy_server" {
         }
       ]
       runcmd = [
-        "curl --location --silent https://github.com/wangyu-/udp2raw/releases/latest/download/udp2raw_binaries.tar.gz | sudo tar --extract --gzip --transform='s|${local.udp2raw_binary}|udp2raw|' --directory='/usr/local/bin' --file=- ${local.udp2raw_binary}",
+        "curl --location --silent https://github.com/wangyu-/udp2raw/releases/latest/download/udp2raw_binaries.tar.gz | sudo tar --extract --gzip --transform='s|${local.proxy_udp2raw_binary}|udp2raw|' --directory='/usr/local/bin' --file=- ${local.proxy_udp2raw_binary}",
         "systemctl daemon-reload",
         "systemctl enable --now udp2raw"
       ]

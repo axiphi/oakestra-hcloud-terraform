@@ -50,13 +50,26 @@ locals {
       }
     }
   }
+  registry_udp2raw_binary = local.hcloud_architecture_to_udp2raw_binary[data.hcloud_server_type.this[var.registry_server_type].architecture]
 }
 
 resource "wireguard_asymmetric_key" "local" {}
 
 resource "wireguard_asymmetric_key" "remote" {}
 
-data "wireguard_config_document" "local" {
+data "wireguard_config_document" "remote" {
+  private_key = wireguard_asymmetric_key.remote.private_key
+  addresses   = ["${local.wireguard_remote_ipv4}/32"]
+  listen_port = 51820
+  mtu         = 1200
+
+  peer {
+    public_key  = wireguard_asymmetric_key.local.public_key
+    allowed_ips = [local.wireguard_subnet_ipv4_cidr]
+  }
+}
+
+data "wireguard_config_document" "local_udp" {
   private_key = wireguard_asymmetric_key.local.private_key
   addresses   = ["${local.wireguard_local_ipv4}/32"]
   # Hetzner's private networks add additional overhead, so to get the network consistently working we need a low MTU
@@ -69,14 +82,18 @@ data "wireguard_config_document" "local" {
   }
 }
 
-data "wireguard_config_document" "remote" {
-  private_key = wireguard_asymmetric_key.remote.private_key
-  addresses   = ["${local.wireguard_remote_ipv4}/32"]
-  listen_port = 51820
+data "wireguard_config_document" "local_tcp" {
+  private_key = wireguard_asymmetric_key.local.private_key
+  addresses   = ["${local.wireguard_local_ipv4}/32"]
+  # Hetzner's private networks add additional overhead, so to get the network consistently working we need a low MTU
+  mtu = 1200
+  pre_up      = ["udp2raw -c -l 127.0.0.1:51820 -r ${hcloud_primary_ip.registry.ip_address}:51819 -k '${random_password.udp2raw.result}' --raw-mode faketcp -a --log-level 3 &"]
+  post_down   = ["pkill -f 'udp2raw -c -l 127.0.0.1:51820'"]
 
   peer {
-    public_key  = wireguard_asymmetric_key.local.public_key
-    allowed_ips = [local.wireguard_subnet_ipv4_cidr]
+    public_key  = wireguard_asymmetric_key.remote.public_key
+    endpoint    = "127.0.0.1:51820"
+    allowed_ips = [local.wireguard_subnet_ipv4_cidr, local.hcloud_subnet_ipv4_cidr, local.proxy_client_subnet_ipv4_cidr]
   }
 }
 
@@ -168,6 +185,7 @@ data "cloudinit_config" "registry" {
             -A DOCKER-USER -i eth0 -j DROP
             -A INPUT -i eth0 -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
             -A INPUT -i eth0 -p udp --dport 51820 -j ACCEPT
+            -A INPUT -i eth0 -p tcp --dport 51819 -j ACCEPT
             -A INPUT -i eth0 -j DROP
             COMMIT
             *mangle
@@ -371,6 +389,26 @@ data "cloudinit_config" "registry" {
           permissions = "0644"
         },
         {
+          path        = "/usr/local/lib/systemd/system/udp2raw.service"
+          content     = <<-EOT
+            [Unit]
+            Description=Wireguard over TCP via udp2raw
+            After=netfilter-persistent.service
+            After=network.target
+
+            [Service]
+            Type=simple
+            ExecStart=/usr/local/bin/udp2raw -s -l 0.0.0.0:51819 -r 127.0.0.1:51820 -k '${random_password.udp2raw.result}' --raw-mode faketcp -a --log-level 3
+            Restart=always
+            RestartSec=5
+
+            [Install]
+            WantedBy=multi-user.target
+          EOT
+          owner       = "root:root"
+          permissions = "0644"
+        },
+        {
           path        = "/root/.bashrc"
           content     = <<-EOT
             cd /etc/docker-compose/oakestra-registries
@@ -379,7 +417,11 @@ data "cloudinit_config" "registry" {
           permissions = "0644"
         }
       ]
-      runcmd = ["systemctl enable --now oakestra-registries"]
+      runcmd = [
+        "curl --location --silent https://github.com/wangyu-/udp2raw/releases/latest/download/udp2raw_binaries.tar.gz | sudo tar --extract --gzip --transform='s|${local.registry_udp2raw_binary}|udp2raw|' --directory='/usr/local/bin' --file=- ${local.registry_udp2raw_binary}",
+        "systemctl daemon-reload",
+        "systemctl enable --now oakestra-registries udp2raw"
+      ]
     })
   }
 }
