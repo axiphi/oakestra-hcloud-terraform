@@ -174,7 +174,7 @@ resource "hcloud_server" "worker" {
   name        = "${var.setup_name}-${each.key}"
   image       = "debian-12"
   server_type = each.value.server_type
-  datacenter  = data.hcloud_datacenter.this.name
+  location    = data.hcloud_location.this.name
   ssh_keys    = [hcloud_ssh_key.this.id]
   user_data   = data.cloudinit_config.worker[each.key].rendered
 

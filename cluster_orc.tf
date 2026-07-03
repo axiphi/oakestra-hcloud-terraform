@@ -222,7 +222,7 @@ resource "hcloud_server" "cluster_orc" {
   name        = "${var.setup_name}-${each.key}-orc"
   image       = "debian-12"
   server_type = each.value.orc_server_type
-  datacenter  = data.hcloud_datacenter.this.name
+  location    = data.hcloud_location.this.name
   ssh_keys    = [hcloud_ssh_key.this.id]
   user_data   = data.cloudinit_config.cluster_orc[each.key].rendered
 

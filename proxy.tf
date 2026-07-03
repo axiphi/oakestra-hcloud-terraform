@@ -15,9 +15,8 @@ resource "hcloud_network_route" "proxy" {
 resource "hcloud_primary_ip" "proxy_server" {
   count         = var.proxy_client_count > 0 ? 1 : 0
   name          = "${var.setup_name}-proxy"
-  datacenter    = data.hcloud_datacenter.this.name
+  location      = data.hcloud_location.this.name
   type          = "ipv4"
-  assignee_type = "server"
   auto_delete   = false
 }
 
@@ -181,7 +180,7 @@ resource "hcloud_server" "proxy_server" {
   name        = "${var.setup_name}-proxy"
   image       = "ubuntu-24.04"
   server_type = var.proxy_server_type
-  datacenter  = data.hcloud_datacenter.this.name
+  location    = data.hcloud_location.this.name
   ssh_keys    = [hcloud_ssh_key.this.id]
   user_data   = data.cloudinit_config.proxy_server[0].rendered
 

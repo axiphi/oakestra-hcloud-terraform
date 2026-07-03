@@ -32,10 +32,10 @@ variable "oakestra_dashboard_version" {
   EOT
 }
 
-variable "datacenter" {
+variable "location" {
   type        = string
-  description = "The datacenter where servers will be provisioned."
-  default     = "fsn1-dc14"
+  description = "The location where servers will be provisioned."
+  default     = "fsn1"
 }
 
 variable "registry_server_type" {

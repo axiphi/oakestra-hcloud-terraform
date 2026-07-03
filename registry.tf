@@ -7,9 +7,8 @@ resource "hcloud_network_subnet" "registry" {
 
 resource "hcloud_primary_ip" "registry" {
   name          = "${var.setup_name}-registry"
-  datacenter    = data.hcloud_datacenter.this.name
+  location      = data.hcloud_location.this.name
   type          = "ipv4"
-  assignee_type = "server"
   auto_delete   = false
 }
 
@@ -86,9 +85,9 @@ data "wireguard_config_document" "local_tcp" {
   private_key = wireguard_asymmetric_key.local.private_key
   addresses   = ["${local.wireguard_local_ipv4}/32"]
   # Hetzner's private networks add additional overhead, so to get the network consistently working we need a low MTU
-  mtu = 1200
-  pre_up      = ["udp2raw -c -l 127.0.0.1:51820 -r ${hcloud_primary_ip.registry.ip_address}:51819 -k '${random_password.udp2raw.result}' --raw-mode faketcp -a --log-level 3 &"]
-  post_down   = ["pkill -f 'udp2raw -c -l 127.0.0.1:51820'"]
+  mtu       = 1200
+  pre_up    = ["udp2raw -c -l 127.0.0.1:51820 -r ${hcloud_primary_ip.registry.ip_address}:51819 -k '${random_password.udp2raw.result}' --raw-mode faketcp -a --log-level 3 &"]
+  post_down = ["pkill -f 'udp2raw -c -l 127.0.0.1:51820'"]
 
   peer {
     public_key  = wireguard_asymmetric_key.remote.public_key
@@ -431,7 +430,7 @@ resource "hcloud_server" "registry" {
   # the WireGuard module of cloud-init is only supported on Ubuntu
   image       = "ubuntu-24.04"
   server_type = var.registry_server_type
-  datacenter  = data.hcloud_datacenter.this.name
+  location    = data.hcloud_location.this.name
   ssh_keys    = [hcloud_ssh_key.this.id]
   user_data   = data.cloudinit_config.registry.rendered
 

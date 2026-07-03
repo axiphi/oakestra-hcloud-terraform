@@ -11,12 +11,8 @@ data "hcloud_server_type" "this" {
   name = each.key
 }
 
-data "hcloud_datacenter" "this" {
-  name = var.datacenter
-}
-
 data "hcloud_location" "this" {
-  id = data.hcloud_datacenter.this.location.id
+  name = var.location
 }
 
 locals {
