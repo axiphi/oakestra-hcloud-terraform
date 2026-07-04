@@ -41,13 +41,13 @@ variable "location" {
 variable "registry_server_type" {
   type        = string
   description = "The Hetzner Cloud server type for the container registries."
-  default     = "cax11"
+  default     = "cpx22"
 }
 
 variable "root_orc_server_type" {
   type        = string
   description = "The Hetzner Cloud server type for the root orchestrator."
-  default     = "cax11"
+  default     = "cpx22"
 }
 
 variable "clusters" {
@@ -59,10 +59,10 @@ variable "clusters" {
     }))
   }))
   default = [{
-    orc_server_type = "cax11"
+    orc_server_type = "cpx22"
     location        = "48.1507,11.5691,1000"
     workers = [{
-      server_type = "cax11"
+      server_type = "cpx22"
     }]
   }]
 }
@@ -70,7 +70,7 @@ variable "clusters" {
 variable "proxy_server_type" {
   type        = string
   description = "The Hetzner Cloud server type for the proxy server."
-  default     = "cax11"
+  default     = "cpx22"
 }
 
 variable "proxy_client_count" {
