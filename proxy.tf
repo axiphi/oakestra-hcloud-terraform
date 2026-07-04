@@ -13,11 +13,11 @@ resource "hcloud_network_route" "proxy" {
 }
 
 resource "hcloud_primary_ip" "proxy_server" {
-  count         = var.proxy_client_count > 0 ? 1 : 0
-  name          = "${var.setup_name}-proxy"
-  location      = data.hcloud_location.this.name
-  type          = "ipv4"
-  auto_delete   = false
+  count       = var.proxy_client_count > 0 ? 1 : 0
+  name        = "${var.setup_name}-proxy"
+  location    = data.hcloud_location.this.name
+  type        = "ipv4"
+  auto_delete = false
 }
 
 resource "random_password" "udp2raw" {

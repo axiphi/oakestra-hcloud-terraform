@@ -97,7 +97,8 @@ resource "local_file" "ssh_config" {
 }
 
 locals {
-  worker_names = [for worker in local.workers : worker.name]
+  cluster_names = [for cluster in local.clusters : cluster.name]
+  worker_names  = [for worker in local.workers : worker.name]
 }
 
 resource "local_file" "init_script" {
@@ -131,6 +132,10 @@ resource "local_file" "init_script" {
       ssh -F "${local_file.ssh_config.filename}" "$@"
     }
 
+    ${var.setup_name}-scp() {
+      scp -F "${local_file.ssh_config.filename}" "$@"
+    }
+
     ${var.setup_name}-image-push() {
       if [ $# -ne 1 ]; then
           echo "Error: ${var.setup_name}-image-push expects exactly one argument." >&2
@@ -152,8 +157,8 @@ resource "local_file" "init_script" {
 
       for worker in '${join("' '", local.worker_names)}'; do
         ${var.setup_name}-ssh -q "$${worker}" "systemctl stop nodeengine.service"
-        scp -q -p -F "${local_file.ssh_config.filename}" "$1" "$${worker}:/usr/local/bin/NodeEngine"
-        scp -q -p -F "${local_file.ssh_config.filename}" "$2" "$${worker}:/usr/local/bin/nodeengined"
+        ${var.setup_name}-scp -q -p "$1" "$${worker}:/usr/local/bin/NodeEngine"
+        ${var.setup_name}-scp -q -p "$2" "$${worker}:/usr/local/bin/nodeengined"
         ${var.setup_name}-ssh -q "$${worker}" "systemctl start nodeengine.service"
       done
     }
@@ -166,8 +171,25 @@ resource "local_file" "init_script" {
 
       for worker in '${join("' '", local.worker_names)}'; do
         ${var.setup_name}-ssh -q "$${worker}" "systemctl stop netmanager.service"
-        scp -q -p -F "${local_file.ssh_config.filename}" "$1" "$${worker}:/usr/local/bin/NetManager"
+        ${var.setup_name}-scp -q -p "$1" "$${worker}:/usr/local/bin/NetManager"
         ${var.setup_name}-ssh -q "$${worker}" "systemctl start netmanager.service"
+      done
+    }
+
+    ${var.setup_name}-cli-push() {
+      if [ $# -ne 1 ]; then
+        echo "Error: ${var.setup_name}-cli-push expects exactly one argument." >&2
+        return 1
+      fi
+
+      ${var.setup_name}-scp -q -p "$1" "root-orc:/usr/local/bin/oak"
+
+      for cluster in '${join("' '", local.cluster_names)}'; do
+        ${var.setup_name}-scp -q -p "$1" "$${cluster}-orc:/usr/local/bin/oak"
+      done
+
+      for worker in '${join("' '", local.worker_names)}'; do
+        ${var.setup_name}-scp -q -p "$1" "$${worker}:/usr/local/bin/oak"
       done
     }
   EOT

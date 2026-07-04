@@ -6,10 +6,10 @@ resource "hcloud_network_subnet" "registry" {
 }
 
 resource "hcloud_primary_ip" "registry" {
-  name          = "${var.setup_name}-registry"
-  location      = data.hcloud_location.this.name
-  type          = "ipv4"
-  auto_delete   = false
+  name        = "${var.setup_name}-registry"
+  location    = data.hcloud_location.this.name
+  type        = "ipv4"
+  auto_delete = false
 }
 
 locals {

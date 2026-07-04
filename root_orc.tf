@@ -12,7 +12,7 @@ locals {
     {
       services = merge(lookup(local.root_orc_compose_base, "services", {}), {
         watchtower = {
-          image   = "containrrr/watchtower:1.7.1"
+          image   = "nickfedor/watchtower:1.19.0"
           restart = "always"
           environment = [
             # the local docker registry notifies watchtower when an image was uploaded

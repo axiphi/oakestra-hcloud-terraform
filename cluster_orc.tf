@@ -13,7 +13,7 @@ locals {
     {
       services = merge(lookup(local.cluster_orc_compose_base, "services", {}), {
         watchtower = {
-          image   = "containrrr/watchtower:1.7.1"
+          image   = "nickfedor/watchtower:1.19.0"
           restart = "always"
           environment = [
             # the local docker registry notifies watchtower when an image was uploaded
@@ -178,6 +178,7 @@ data "cloudinit_config" "cluster_orc" {
             ROOT_ORC_IPV4="${local.root_orc_ipv4}"
             CLUSTER_NAME="${each.value.name}"
             CLUSTER_LOCATION="${each.value.location}"
+            SELF_IPV4="${each.value.orc_ipv4}"
           EOT
           owner       = "root:root"
           permissions = "0644"

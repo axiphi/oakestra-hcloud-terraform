@@ -6,6 +6,7 @@ services:
     restart: "always"
     environment:
       - "MY_PORT=10100"
+      - "LOG_LEVEL=INFO"
       - "SYSTEM_MANAGER_URL=${ROOT_ORC_IPV4}"
       - "SYSTEM_MANAGER_PORT=10000"
       - "CLUSTER_SERVICE_MANAGER_ADDR=cluster-service-manager"
@@ -16,25 +17,41 @@ services:
       - "CLUSTER_SCHEDULER_PORT=10105"
       - "MQTT_BROKER_URL=cluster-mqtt"
       - "MQTT_BROKER_PORT=10003"
+      - "RESOURCE_ABSTRACTOR_URL=cluster-resource-abstractor"
+      - "RESOURCE_ABSTRACTOR_PORT=11012"
       - "CLUSTER_NAME=${CLUSTER_NAME}"
       - "CLUSTER_LOCATION=${CLUSTER_LOCATION}"
+      - "CLUSTER_ADDRESS=${SELF_IPV4}"
     ports:
       - "10100:10100"
     labels:
       - "com.centurylinklabs.watchtower.enable=true"
 
   cluster-scheduler:
-    image: "oakestra/oakestra/cluster-scheduler:${OAKESTRA_VERSION}"
+    image: "oakestra/oakestra/scheduler:${OAKESTRA_VERSION}"
     restart: "always"
     environment:
-      - "MY_PORT=10105"
-      - "CLUSTER_MANAGER_URL=cluster-manager"
-      - "CLUSTER_MANAGER_PORT=10100"
-      - "CLUSTER_MONGO_URL=cluster-mongo"
-      - "CLUSTER_MONGO_PORT=10107"
-      - "REDIS_ADDR=redis://:clusterRedis@cluster-redis:6479"
+      - "ORCHESTRATION_PLANE=cluster"
+      - "API_PORT=10105"
+      - "MANAGER_URL=cluster-manager"
+      - "MANAGER_PORT=10100"
+      - "RESOURCE_ABSTRACTOR_URL=cluster-resource-abstractor"
+      - "RESOURCE_ABSTRACTOR_PORT=11012"
+      - "REDIS_ADDR=redis://:cluster-redis@cluster-redis:6479"
     ports:
       - "10105:10105"
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
+
+  cluster-resource-abstractor:
+    image: "oakestra/oakestra/resource-abstractor:${OAKESTRA_VERSION}"
+    restart: "always"
+    environment:
+      - "RESOURCE_ABSTRACTOR_PORT=11012"
+      - "MONGO_URL=cluster-mongo"
+      - "MONGO_PORT=10107"
+    ports:
+      - "11012:11012"
     labels:
       - "com.centurylinklabs.watchtower.enable=true"
 
@@ -51,6 +68,8 @@ services:
       - "SYSTEM_MANAGER_PORT=10000"
       - "CLUSTER_MONGO_URL=cluster-mongo-net"
       - "CLUSTER_MONGO_PORT=10108"
+      - "CLUSTER_NAME=${CLUSTER_NAME}"
+      - "CLUSTER_ADDRESS=${SELF_IPV4}"
     ports:
       - "10110:10110"
     labels:
@@ -84,7 +103,7 @@ services:
 
   cluster-redis:
     image: "redis:7.4.2"
-    command: ["redis-server", "--requirepass", "clusterRedis", "--port", "6479"]
+    command: ["redis-server", "--requirepass", "cluster-redis", "--port", "6479"]
     restart: "always"
     ports:
       - "6479:6479"
