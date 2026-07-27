@@ -233,6 +233,20 @@ data "cloudinit_config" "registry" {
           path = "/etc/docker-compose/oakestra-registries/docker-compose.yml",
           content = yamlencode({
             services = {
+              "watchtower-hook" = {
+                image   = "thecatlady/webhook:2.8.1"
+                restart = "always"
+                command = [
+                  "-verbose",
+                  "-hooks=/etc/webhook/hooks.yml",
+                ]
+                configs = [
+                  {
+                    source = "watchtower-hook-config"
+                    target = "/etc/webhook/hooks.yml"
+                  }
+                ]
+              }
               "registry-local" = {
                 image   = "registry:2.8.3"
                 restart = "always"
@@ -292,43 +306,68 @@ data "cloudinit_config" "registry" {
               }
             }
             configs = {
+              "watchtower-hook-config" = {
+                content = yamlencode([
+                  {
+                    id                = "notify-watchtower"
+                    "execute-command" = "curl"
+                    "pass-environment-to-command" = [
+                        {
+                            source = "payload",
+                            name = "events.0.target.repository",
+                            envname = "REPOSITORY"
+                        },
+                        {
+                            source = "payload",
+                            name = "events.0.target.tag",
+                            envname = "TAG"
+                        }
+                    ],
+                    "pass-arguments-to-command" = concat(
+                      [
+                        { source = "string", name = "--variable" },
+                        { source = "string", name = "%REPOSITORY" },
+                        { source = "string", name = "--variable" },
+                        { source = "payload", name = "%TAG" },
+                        
+                        { source = "string", name = "-X" },
+                        { source = "string", name = "POST" },
+                        { source = "string", name = "-H" },
+                        { source = "string", name = "Authorization: Bearer ${random_password.watchtower.result}" },
+                        { source = "string", name = "--expand-url" },
+                        { source = "string", name = "http://${local.root_orc_ipv4}:${local.watchtower_port}/v1/update?image={{REPOSITORY}}:{{TAG}}" }
+                      ],
+                      flatten([
+                        for cluster in local.clusters : [
+                          { source = "string", name = "--next" },
+                          { source = "string", name = "-X" },
+                          { source = "string", name = "POST" },
+                          { source = "string", name = "-H" },
+                          { source = "string", name = "Authorization: Bearer ${random_password.watchtower.result}" },
+                          { source = "string", name = "--expand-url" },
+                          { source = "string", name = "http://${cluster.orc_ipv4}:${local.watchtower_port}/v1/update?image={{REPOSITORY}}:{{TAG}}" }
+                        ]
+                      ])
+                    )
+                  }
+                ])
+              }
               "registry-config-local" = {
                 content = yamlencode(merge(local.shared_registry_config, {
                   notifications = {
-                    endpoints = concat(
-                      [
-                        {
-                          name = "watchtower-root-orc"
-                          url  = "http://${local.root_orc_ipv4}:${local.watchtower_port}/v1/update"
-                          headers = {
-                            "Authorization" = ["Bearer ${random_password.watchtower.result}"]
-                          }
-                          timeout   = "30s"
-                          threshold = 3
-                          backoff   = "30s"
-                          ignore = {
-                            actions    = ["pull"]
-                            mediatypes = ["application/octet-stream"]
-                          }
+                    endpoints = [
+                      {
+                        name      = "watchtower-hook"
+                        url       = "http://watchtower-hook:9000/hooks/notify-watchtower"
+                        timeout   = "30s"
+                        threshold = 3
+                        backoff   = "30s"
+                        ignore = {
+                          actions    = ["pull"]
+                          mediatypes = ["application/octet-stream"]
                         }
-                      ],
-                      [
-                        for cluster in local.clusters : {
-                          name = "watchtower-${cluster.name}-orc"
-                          url  = "http://${cluster.orc_ipv4}:${local.watchtower_port}/v1/update"
-                          headers = {
-                            "Authorization" = ["Bearer ${random_password.watchtower.result}"]
-                          }
-                          timeout   = "30s"
-                          threshold = 3
-                          backoff   = "30s"
-                          ignore = {
-                            actions    = ["pull"]
-                            mediatypes = ["application/octet-stream"]
-                          }
-                        }
-                      ]
-                    )
+                      }
+                    ]
                   }
                 }))
               }
