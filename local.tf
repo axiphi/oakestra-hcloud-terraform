@@ -101,6 +101,12 @@ locals {
   worker_names  = [for worker in local.workers : worker.name]
 }
 
+resource "local_file" "normalize_image_script" {
+  filename        = "${null_resource.oakestra_data_dir.triggers.oakestra_data_dir}/normalize-image.sh"
+  content         = file("${path.module}/scripts/normalize-image.sh")
+  file_permission = "0744"
+}
+
 resource "local_file" "init_script" {
   filename        = "${null_resource.oakestra_data_dir.triggers.oakestra_data_dir}/init.sh"
   content         = <<-EOT
@@ -142,7 +148,11 @@ resource "local_file" "init_script" {
           return 1
       fi
 
-      if command -v pv 2>&1 >/dev/null; then
+      if command -v podman 2>&1 >/dev/null; then
+        normalized_image="$(${local_file.normalize_image_script.filename} $1)"
+        retagged_image="${local.registry_ipv4}:${local.registry_local_port}/$${normalized_image}:${var.oakestra_version}"
+        podman push --tls-verify=false "$1" "docker://$${retagged_image}"
+      elif command -v pv 2>&1 >/dev/null; then
         docker save "$1" | pv -s $(docker image inspect "$1" --format='{{.Size}}') | gzip | ${var.setup_name}-ssh -q registry "zcat | restore-image.sh \"$1\""
       else
         docker save "$1" | gzip | ${var.setup_name}-ssh -q registry "zcat | restore-image.sh \"$1\""
